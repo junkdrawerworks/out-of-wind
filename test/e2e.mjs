@@ -368,6 +368,10 @@ try {
   assert.ok(said.some(x => /^Still crowned\. /.test(x)), 'said again after starting over: ' + said.join(' | '));
 
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'the bench scrolls sideways on a phone');
+  // A swipe sideways is nobody's, so it can't run on into Chrome's swipe to go Back or Forward: the page doesn't
+  // overscroll, and the bench takes every touch.
+  assert.deepEqual(await page.evaluate(() => ['html', 'body', '.stage', '#cv'].map(s => { const c = getComputedStyle(document.querySelector(s)); return [s, c.overscrollBehaviorX, c.touchAction]; })),
+    [['html', 'none', 'auto'], ['body', 'none', 'auto'], ['.stage', 'auto', 'none'], ['#cv', 'auto', 'none']], 'nothing overscrolls sideways, and the bench takes every touch');
   await page.click('#backBtn');
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'the rack scrolls sideways on a phone');
 
