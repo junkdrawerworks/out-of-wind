@@ -55,6 +55,9 @@ To put it online with GitHub Pages: **Settings → Pages → Build and deploymen
 - `js/solver.js`: the bot that planes each board to set par and the thickness it starts at; `scripts/par.mjs` runs it.
 - `scripts/cards.mjs`: a second player who follows each board's card and sees only what the page shows: the sticks, the light under the straightedge, rough patches, the grain on the edge, tear-out and the bench's notes. `npm test` has it finish every board within par, with its strokes started off the ends, and again with each one put down 8 mm onto the board and lifted 8 mm short, as a finger does.
 - `js/app.js`: the page: the rack of boards, the bench, strokes from your finger, the bench's notes, grading and saving.
+- `js/edge-guard.js`: keeps a stroke near the side of a phone's screen from throwing you back to the rack when
+  Android takes it for its back gesture: a Back while a finger is on the bench, or just after a touch on it was taken,
+  leaves the bench as it was.
 - `js/wood.js` draws each board's planed and rough-sawn faces, pixel by pixel; `js/draw.js` the bench: the lamp, pencil, tear-out, the plane, shavings, the checks and the side view; `js/table.js` the finished tabletop.
 - `js/sound.js`: shavings, tear-out, pencil, the steel rule, the winding sticks and the bell, all made with Web Audio.
 - `js/units.js`, `js/store.js`, `js/rng.js`: inches or millimetres, what's kept in localStorage, and seeded randomness.

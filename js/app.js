@@ -12,6 +12,7 @@ import * as sound from './sound.js';
 import * as U from './units.js';
 import { load, save, better } from './store.js';
 import { rng } from './rng.js';
+import { guardEdges } from './edge-guard.js';
 
 const $ = id => document.getElementById(id);
 const state = load();
@@ -213,7 +214,18 @@ function route(to) {
   if (want) openBoard(want);
   else showHome();
 }
-window.addEventListener('popstate', () => route());
+// A stroke near the side of a phone's screen can set off Android's back gesture (or Chrome's swipe to go back), which
+// takes the touch away and then goes Back, to the rack. A web page can't keep those gestures off its edges, so a Back
+// that comes while a finger is on the bench, or within a second of a touch on it being taken, is a slip: the board's
+// step goes back on the history and the bench stays as it was. (See js/edge-guard.js.)
+const guard = guardEdges({ surfaces: [$('cv')], history: false });
+window.addEventListener('popstate', () => {
+  if (shown && guard.slip()) {
+    try { history.pushState({ fromRack: 1 }, '', '#' + shown); } catch { /* no history here: Back can't have come */ }
+    return;
+  }
+  route();
+});
 window.addEventListener('hashchange', () => route());
 
 function showHome() {

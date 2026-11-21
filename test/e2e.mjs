@@ -7,10 +7,10 @@
 // tear-out shows in the top bar; it goes through the gauge line and starts again; a finished board
 // opens fresh to plane again; units; and on a crowned board planed the obvious way, the bench says
 // what shape is left, again on a second attempt. Then board 3's last few thou, Back the way Android
-// does it, a page that won't let it change its address, the tabletop at the end, and a finger that
-// never quite reaches the ends; on a laptop and a phone on its side; and the checks every project
-// wants: no errors, nothing loaded from elsewhere, nothing scrolling sideways, installable, and it
-// still plays offline.
+// does it, a Back mid-stroke taken for a slip, the board clear of the screen's sides, a page that
+// won't let it change its address, the tabletop at the end, and a finger that never quite reaches the
+// ends; on a laptop and a phone on its side; and the checks every project wants: no errors, nothing
+// loaded from elsewhere, nothing scrolling sideways, installable, and it still plays offline.
 import { createRequire } from 'node:module';
 import { execSync } from 'node:child_process';
 import { createServer } from 'node:http';
@@ -487,6 +487,70 @@ try {
     await pg.goBack();
     assert.equal(pg.url(), 'about:blank', 'Back from the rack leaves the game');
     await c.close();
+  }
+
+  // ---------- a swipe near the screen's side ----------
+  {
+    step('a Back mid-stroke, or just after the browser took the touch, keeps the bench as it was; later, Back goes to the rack');
+    const c = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, locale: 'en-US' });
+    const pg = await c.newPage();
+    watch(pg, 'slip');
+    const cd = await c.newCDPSession(pg);
+    const g = (marks, strokes) => ({ marks, strokes, thick: 19.9, torn: 0, flat: 0.12 });
+    await pg.addInitScript(s => { if (location.protocol === 'http:' && !localStorage.getItem('out-of-wind.v1')) localStorage.setItem('out-of-wind.v1', JSON.stringify(s)); },
+      { v: 1, best: { 1: g(4, 25), 2: g(3, 30) }, benches: {}, attempts: {}, seen: { swipe: 1, stroke: 1, pencil: 1 }, unit: 'in', sound: false });
+    await pg.goto('about:blank');
+    await pg.goto(base);
+    await pg.click('.plank[data-no="3"]');
+    await pg.click('#introGo');
+    const touch = async (type, x, y) => cd.send('Input.dispatchTouchEvent', { type, touchPoints: x === undefined ? [] : [await at(pg, x, y)] });
+    const onBench = async () => { await pg.waitForTimeout(300); return pg.evaluate(() => !document.getElementById('bench').hidden && location.hash === '#3' && history.state?.fromRack === 1); };
+    const steps = await pg.evaluate(() => history.length);
+    // Back in the middle of a stroke: the stroke carries on, and lifting takes the shaving.
+    await touch('touchStart', -15, 30);
+    for (let x = 40; x <= 360; x += 40) await touch('touchMove', x, 30);
+    await pg.evaluate(() => history.back());
+    assert.ok(await onBench(), 'Back in the middle of a stroke stays on the bench');
+    for (let x = 400; x <= 780; x += 40) await touch('touchMove', x, 30);
+    await touch('touchEnd');
+    assert.equal((await peek(pg)).strokes, 1, 'the stroke taken across the Back counts');
+    // The browser takes the touch (a stroke that ends where it was taken) and a Back follows: the bench stays.
+    await touch('touchStart', -15, 60);
+    for (let x = 40; x <= 200; x += 40) await touch('touchMove', x, 60);
+    await touch('touchCancel');
+    const was = await peek(pg);
+    await pg.goBack({ waitUntil: 'commit', timeout: 2000 }).catch(() => {});
+    assert.ok(await onBench(), 'Back just after the touch was taken stays on the bench');
+    assert.deepEqual(await peek(pg), was, 'and the board is as it was');
+    assert.equal(await pg.evaluate(() => history.length), steps, 'with its one step in the history');
+    // A second on, Back goes to the rack as it always has, and from there leaves.
+    await pg.waitForTimeout(1100);
+    await pg.goBack();
+    await pg.waitForSelector('#home', { state: 'visible', timeout: 5000 });
+    assert.equal(await pg.textContent('#resumeBtn'), 'Back to No. 3 · Poplar');
+    await pg.goBack();
+    assert.equal(pg.url(), 'about:blank', 'Back from the rack leaves the game');
+    await c.close();
+  }
+  {
+    step('on a phone, the board keeps clear of the screen’s sides, where Android’s back gesture starts, the wide panel too');
+    const best = Object.fromEntries(Array.from({ length: 12 }, (_, k) => [k + 1, { marks: 4, strokes: 30, thick: 19.9, torn: 0, flat: 0.12 }]));
+    for (const [width, height] of [[320, 568], [360, 740], [390, 844]]) {
+      const c = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, locale: 'en-US' });
+      await c.addInitScript(s => { if (location.protocol === 'http:' && !localStorage.getItem('out-of-wind.v1')) localStorage.setItem('out-of-wind.v1', JSON.stringify(s)); },
+        { v: 1, best, benches: {}, attempts: {}, seen: { swipe: 1, stroke: 1, pencil: 1 }, unit: 'in', sound: false });
+      const pg = await c.newPage();
+      watch(pg, 'sides');
+      await pg.goto(base);
+      for (const no of [1, 13]) {
+        await pg.evaluate(n => { location.hash = '#' + n; }, no);
+        await pg.waitForSelector('#introGo', { state: 'visible' });
+        await pg.click('#introGo');
+        const b = await pg.evaluate(() => { const o = window.outOfWind, d = o.board(), a = o.toClient(0, 0), z = o.toClient(d.L, d.W); return [Math.min(a.x, z.x), innerWidth - Math.max(a.x, z.x)]; });
+        assert.ok(b[0] >= 24 && b[1] >= 24, `board ${no} is ${Math.min(...b).toFixed(1)} px from the screen's side at ${width} px`);
+      }
+      await c.close();
+    }
   }
 
   // ---------- shown inside another page ----------

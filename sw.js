@@ -8,11 +8,11 @@
 // refreshed only when a page that loads it is visited online, and the copy could mix two releases. So FILES is a
 // fingerprint of every file in SHELL: change any of them and test/e2e.mjs fails until FILES is changed to match (it
 // says what to), which changes this file, so every copy is made whole again at once.
-const CACHE = 'out-of-wind-v2';
-const FILES = 'ab371de1'; // test/e2e.mjs checks this
+const CACHE = 'out-of-wind-v3';
+const FILES = 'f682aed4'; // test/e2e.mjs checks this
 const SHELL = [
   './', 'index.html', 'css/app.css', 'icon.svg', 'manifest.webmanifest',
-  'js/app.js', 'js/board.js', 'js/boards.js', 'js/draw.js', 'js/plane.js', 'js/rng.js',
+  'js/app.js', 'js/board.js', 'js/boards.js', 'js/draw.js', 'js/edge-guard.js', 'js/plane.js', 'js/rng.js',
   'js/sound.js', 'js/store.js', 'js/table.js', 'js/units.js', 'js/wood.js', 'js/woods.js',
   'fonts/young-serif.woff2', 'fonts/alegreya-sans-400.woff2', 'fonts/alegreya-sans-700.woff2', 'fonts/reenie-beanie.woff2',
 ];
