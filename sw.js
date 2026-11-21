@@ -9,7 +9,7 @@
 // fingerprint of every file in SHELL: change any of them and test/e2e.mjs fails until FILES is changed to match (it
 // says what to), which changes this file, so every copy is made whole again at once.
 const CACHE = 'out-of-wind-v3';
-const FILES = 'f682aed4'; // test/e2e.mjs checks this
+const FILES = 'bf308d81'; // test/e2e.mjs checks this
 const SHELL = [
   './', 'index.html', 'css/app.css', 'icon.svg', 'manifest.webmanifest',
   'js/app.js', 'js/board.js', 'js/boards.js', 'js/draw.js', 'js/edge-guard.js', 'js/plane.js', 'js/rng.js',
